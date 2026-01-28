@@ -17,18 +17,27 @@ particlesJS("particles-js", {
 });
 
 // 2. Load tasks from URL on startup
-window.onload = () => {
+window.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedData = urlParams.get('tasks');
+    const sharedData = urlParams.get("data");
+
     if (sharedData) {
         try {
-            tasks = JSON.parse(atob(sharedData));
-            renderTasks();
-        } catch (e) {
+            const parsed = JSON.parse(atob(sharedData));
+
+            if (parsed.title) {
+                document.getElementById("taskTitle").innerText = parsed.title;
+            }
+
+            if (Array.isArray(parsed.tasks)) {
+                tasks = parsed.tasks;
+                renderTasks();
+            }
+        } catch {
             console.error("Invalid share link");
         }
     }
-};
+});
 
 function addTask() {
     const input = document.getElementById('taskInput');
@@ -56,14 +65,22 @@ function deleteTask(index) {
 
 // 3. Generate Shareable Link (Base64)
 function generateShareLink() {
-    const base64Tasks = btoa(JSON.stringify(tasks));
-    const shareUrl = `${window.location.origin}${window.location.pathname}?tasks=${base64Tasks}`;
+    const title = document.getElementById("taskTitle").innerText;
+
+    const data = {
+        title: title,
+        tasks: tasks
+    };
+
+    const encodedData = btoa(JSON.stringify(data));
+    const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encodedData}`;
 
     navigator.clipboard.writeText(shareUrl);
+
     Swal.fire({
-        title: 'Link Copied!',
-        text: 'Anyone with this link can see your current list.',
-        icon: 'success',
-        confirmButtonColor: '#0d6efd'
+        title: "Link Copied!",
+        text: "Heading and tasks are included in the link.",
+        icon: "success",
+        confirmButtonColor: "#0d6efd"
     });
 }
